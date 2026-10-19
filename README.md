@@ -1,3 +1,5 @@
+**English** | [Español](README.es.md) | [Русский](README.ru.md)
+
 # PHOSPHOR
 
 **A CRT terminal for Windows.** Simulated phosphor with persistence and burn-in, scanlines, tube curvature, ten skins, optional monitor frames, a boot sequence, synthesized sounds and a modem-speed mode. It runs PowerShell, or any command you give it, such as [Claude Code](https://claude.com/claude-code).
