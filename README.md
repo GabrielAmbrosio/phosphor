@@ -105,7 +105,7 @@ Everything is in four files: [`main.js`](main.js) (window, pty), [`preload.js`](
 
 ## Credits
 
-- Inspired by [cool-retro-term](https://github.com/Swordfish90/cool-retro-term) by Filippo Scognamiglio. PHOSPHOR does not use any of its code.
+- Inspired by [cool-retro-term](https://github.com/Swordfish90/cool-retro-term) by Filippo Scognamiglio ([@Swordfish90](https://github.com/Swordfish90)). PHOSPHOR does not use any of its code.
 - Font: [VT323](https://fonts.google.com/specimen/VT323) by Peter Hull, under the SIL Open Font License (see [`fonts/OFL.txt`](fonts/OFL.txt)).
 - Built with [Electron](https://www.electronjs.org/), [xterm.js](https://xtermjs.org/) and [node-pty](https://github.com/microsoft/node-pty).
 - Not affiliated with any company whose software you may run inside it.
