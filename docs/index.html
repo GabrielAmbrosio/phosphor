@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PHOSPHOR - a CRT terminal for Windows</title>
+  <meta name="description" content="PHOSPHOR is an open-source CRT terminal for Windows: phosphor persistence, burn-in, scanlines, curvature, ten skins and optional monitor frames.">
+  <meta property="og:title" content="PHOSPHOR - a CRT terminal for Windows">
+  <meta property="og:description" content="Open-source CRT terminal for Windows with simulated phosphor, burn-in, skins and monitor frames.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://gabrielambrosio.github.io/phosphor/img/skin-green-p1.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23060a06'/%3E%3Crect x='9' y='7' width='5' height='18' fill='%237dffa0'/%3E%3Crect x='14' y='7' width='8' height='5' fill='%237dffa0'/%3E%3Crect x='14' y='14' width='8' height='5' fill='%237dffa0'/%3E%3Crect x='20' y='9' width='3' height='8' fill='%237dffa0'/%3E%3C/svg%3E">
+  <style>
+    @font-face { font-family: 'VT323'; src: url('fonts/VT323.woff2') format('woff2'); font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122; }
+    @font-face { font-family: 'VT323'; src: url('fonts/VT323-ext.woff2') format('woff2'); font-display: swap; unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1E00-1EFF; }
+
+    :root {
+      --bg: #070a07; --panel: #0d130d; --line: #1f3a26; --text: #c4e8cd; --muted: #84a88d;
+      --accent: #7dffa0; --amber: #ffb347; --code: #050805;
+      --mono: 'VT323', 'Cascadia Mono', Consolas, monospace;
+      --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.6 var(--sans); }
+    a { color: var(--accent); }
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+    h1, h2, h3 { font-family: var(--mono); font-weight: 400; letter-spacing: .5px; line-height: 1.1; margin: 0; }
+    h2 { font-size: 40px; color: var(--accent); margin-bottom: 8px; text-shadow: 0 0 10px rgba(125,255,160,.35); }
+    section { padding: 56px 0; }
+    .lead { color: var(--muted); max-width: 680px; margin: 0 0 28px; }
+
+    /* language switch: English is the default, no JavaScript needed for it */
+    [data-l] { display: none; }
+    html[lang="en"] [data-l="en"], html[lang="es"] [data-l="es"], html[lang="ru"] [data-l="ru"] { display: revert; }
+
+    nav { position: sticky; top: 0; z-index: 5; background: rgba(7,10,7,.92); backdrop-filter: blur(6px); border-bottom: 1px solid var(--line); }
+    nav .wrap { display: flex; align-items: center; gap: 18px; height: 58px; }
+    .brand { font: 28px/1 var(--mono); color: var(--accent); text-decoration: none; letter-spacing: 3px; text-shadow: 0 0 8px rgba(125,255,160,.5); }
+    nav .links { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+    nav a.l { color: var(--muted); text-decoration: none; font-size: 15px; }
+    nav a.l:hover { color: var(--accent); }
+    .lang { display: flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+    .lang button { background: none; border: 0; color: var(--muted); padding: 5px 9px; cursor: pointer; font: 13px var(--sans); }
+    .lang button[aria-pressed="true"] { background: #14301c; color: var(--accent); }
+
+    .hero { padding: 48px 0 24px; }
+    .hero .wrap { display: grid; grid-template-columns: 1fr 1.1fr; gap: 36px; align-items: center; }
+    h1 { font-size: 64px; color: var(--accent); text-shadow: 0 0 14px rgba(125,255,160,.5); }
+    .tag { font: 28px/1.2 var(--mono); color: var(--text); margin: 10px 0 14px; }
+    .hero p { color: var(--muted); margin: 0 0 22px; }
+    .btns { display: flex; flex-wrap: wrap; gap: 10px; }
+    .btn { display: inline-block; padding: 10px 18px; border-radius: 6px; border: 1px solid var(--accent); color: var(--accent); text-decoration: none; font-weight: 600; }
+    .btn.primary { background: var(--accent); color: #04140a; }
+    .btn:hover { filter: brightness(1.12); }
+
+    /* the hero terminal is plain CSS and text, not an image */
+    .crt { position: relative; border: 10px solid #1c1c1f; border-radius: 22px; background: #040a05; padding: 20px 22px; min-height: 290px;
+      box-shadow: 0 0 0 2px #35353b, 0 20px 60px rgba(0,0,0,.6), inset 0 0 60px rgba(0,0,0,.9); overflow: hidden; }
+    .crt pre { margin: 0; font: 25px/1.18 var(--mono); color: #aaf06a; text-shadow: 0 0 6px rgba(170,240,106,.65), 0 0 14px rgba(170,240,106,.3); white-space: pre-wrap; min-height: 250px; }
+    .crt .dim { color: #6f9c46; }
+    .crt::before { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 2;
+      background: repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0, rgba(0,0,0,0) 2px, rgba(0,0,0,.28) 3px); }
+    .crt::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 3;
+      background: radial-gradient(ellipse at center, rgba(255,255,255,.04) 0%, rgba(0,0,0,0) 50%, rgba(0,0,0,.55) 100%); animation: flick 4s infinite; }
+    .cursor { display: inline-block; width: .55em; height: 1em; background: #aaf06a; vertical-align: -2px; animation: blink 1.06s steps(1) infinite; box-shadow: 0 0 8px #aaf06a; }
+    @keyframes blink { 50% { opacity: 0; } }
+    @keyframes flick { 0%, 100% { opacity: 1; } 47% { opacity: .92; } 50% { opacity: 1; } 53% { opacity: .95; } }
+    @media (prefers-reduced-motion: reduce) { .crt::after, .cursor { animation: none; } html { scroll-behavior: auto; } }
+
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; }
+    .card h3 { font-size: 27px; color: var(--accent); margin-bottom: 6px; }
+    .card p { margin: 0; color: var(--muted); font-size: 15.5px; }
+
+    .gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .gallery figure { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+    .gallery img { display: block; width: 100%; height: auto; }
+    .gallery figcaption { padding: 10px 14px; font-size: 14.5px; color: var(--muted); }
+    .gallery figcaption b { font: 22px/1 var(--mono); color: var(--accent); margin-right: 6px; }
+
+    .code { position: relative; background: var(--code); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; overflow-x: auto; }
+    .code pre { margin: 0; font: 15px/1.7 'Cascadia Mono', Consolas, monospace; color: #bfe9c9; }
+    .code .cp { position: absolute; top: 10px; right: 10px; background: #12261a; color: var(--accent); border: 1px solid var(--line); border-radius: 5px; padding: 4px 10px; cursor: pointer; font: 13px var(--sans); }
+    .keys { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    .keys td, .keys th { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); font-size: 15px; }
+    .keys th { color: var(--muted); font-weight: 600; }
+    kbd { font: 14px 'Cascadia Mono', Consolas, monospace; background: #12261a; border: 1px solid var(--line); border-radius: 4px; padding: 1px 6px; color: var(--accent); }
+
+    details { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; margin-bottom: 10px; }
+    summary { cursor: pointer; font-weight: 600; color: var(--text); }
+    details p { color: var(--muted); margin: 10px 0 2px; }
+
+    footer { border-top: 1px solid var(--line); padding: 28px 0 40px; color: var(--muted); font-size: 14.5px; }
+    footer p { margin: 6px 0; }
+
+    @media (max-width: 820px) {
+      .hero .wrap { grid-template-columns: 1fr; }
+      h1 { font-size: 52px; }
+      .grid { grid-template-columns: 1fr; }
+      nav a.l { display: none; }
+    }
+    @media (max-width: 520px) { .gallery { grid-template-columns: 1fr; } .crt pre { font-size: 21px; } }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="wrap">
+      <a class="brand" href="#top">PHOSPHOR</a>
+      <div class="links">
+        <a class="l" href="#features"><span data-l="en">Features</span><span data-l="es">Características</span><span data-l="ru">Возможности</span></a>
+        <a class="l" href="#skins"><span data-l="en">Skins</span><span data-l="es">Skins</span><span data-l="ru">Скины</span></a>
+        <a class="l" href="#start"><span data-l="en">Run it</span><span data-l="es">Ejecutar</span><span data-l="ru">Запуск</span></a>
+        <a class="l" href="https://github.com/GabrielAmbrosio/phosphor">GitHub</a>
+        <div class="lang" role="group" aria-label="Language">
+          <button type="button" data-lang="en" aria-pressed="true">EN</button>
+          <button type="button" data-lang="es" aria-pressed="false">ES</button>
+          <button type="button" data-lang="ru" aria-pressed="false">RU</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero" id="top">
+    <div class="wrap">
+      <div>
+        <h1>PHOSPHOR</h1>
+        <div class="tag">
+          <span data-l="en">A CRT terminal for Windows.</span>
+          <span data-l="es">Una terminal CRT para Windows.</span>
+          <span data-l="ru">ЭЛТ-терминал для Windows.</span>
+        </div>
+        <p>
+          <span data-l="en">Simulated phosphor with persistence and burn-in, scanlines, tube curvature, ten skins and optional monitor frames. It runs PowerShell, or any command you give it, such as Claude Code. Free and open source (MIT).</span>
+          <span data-l="es">Fósforo simulado con persistencia y burn-in, scanlines, curvatura de tubo, diez skins y marcos de monitor opcionales. Corre PowerShell, o cualquier comando, como Claude Code. Gratis y de código abierto (MIT).</span>
+          <span data-l="ru">Имитация люминофора с послесвечением и выгоранием, строчная развёртка, кривизна кинескопа, десять скинов и дополнительные рамки мониторов. Запускает PowerShell или любую команду, например Claude Code. Бесплатно и с открытым кодом (MIT).</span>
+        </p>
+        <div class="btns">
+          <a class="btn primary" href="https://github.com/GabrielAmbrosio/phosphor"><span data-l="en">View on GitHub</span><span data-l="es">Ver en GitHub</span><span data-l="ru">Открыть на GitHub</span></a>
+          <a class="btn" href="#start"><span data-l="en">Run it in 4 commands</span><span data-l="es">Ejecutarla en 4 comandos</span><span data-l="ru">Запуск в 4 команды</span></a>
+        </div>
+      </div>
+      <div class="crt" aria-label="Terminal demo"><pre id="demo"></pre></div>
+    </div>
+  </header>
+
+  <section id="features">
+    <div class="wrap">
+      <h2><span data-l="en">What it does</span><span data-l="es">Qué hace</span><span data-l="ru">Что умеет</span></h2>
+      <p class="lead"><span data-l="en">xterm.js draws the terminal, ConPTY runs your shell, and a WebGL shader turns every frame into a glass tube.</span><span data-l="es">xterm.js dibuja la terminal, ConPTY ejecuta tu shell y un shader WebGL convierte cada cuadro en un tubo de vidrio.</span><span data-l="ru">xterm.js рисует терминал, ConPTY запускает оболочку, а WebGL-шейдер превращает каждый кадр в стеклянную трубку.</span></p>
+      <div class="grid">
+        <div class="card"><h3><span data-l="en">Real phosphor</span><span data-l="es">Fósforo real</span><span data-l="ru">Настоящий люминофор</span></h3><p><span data-l="en">Persistence (light fades slowly) and burn-in, a faint ghost of what stayed on screen.</span><span data-l="es">Persistencia (la luz se apaga de a poco) y burn-in, un fantasma tenue de lo que quedó en pantalla.</span><span data-l="ru">Послесвечение (свет гаснет постепенно) и выгорание — слабый «призрак» того, что оставалось на экране.</span></p></div>
+        <div class="card"><h3><span data-l="en">The tube</span><span data-l="es">El tubo</span><span data-l="ru">Кинескоп</span></h3><p><span data-l="en">Curvature, scanlines, aperture mask, vignette, flicker, rounded glass and a power-on animation.</span><span data-l="es">Curvatura, scanlines, máscara de apertura, viñeta, parpadeo, vidrio redondeado y animación de encendido.</span><span data-l="ru">Кривизна, строчная развёртка, апертурная маска, виньетка, мерцание, скруглённое стекло и анимация включения.</span></p></div>
+        <div class="card"><h3><span data-l="en">Monitor frames</span><span data-l="es">Marcos de monitor</span><span data-l="ru">Рамки мониторов</span></h3><p><span data-l="en">Beige 80s, black or retro TV, drawn in CSS with a power LED. Optional.</span><span data-l="es">Beige de los 80, negro o TV retro, dibujados en CSS con un LED de encendido. Opcionales.</span><span data-l="ru">Бежевая в стиле 80-х, чёрная или ретро-ТВ, нарисованы на CSS со светодиодом. По желанию.</span></p></div>
+        <div class="card"><h3><span data-l="en">Boot and sound</span><span data-l="es">Arranque y sonido</span><span data-l="ru">Загрузка и звук</span></h3><p><span data-l="en">BIOS-style boot text, key clicks, CRT hum and a power-on sweep, all synthesized. Optional.</span><span data-l="es">Texto de arranque estilo BIOS, clics de teclado, zumbido de CRT y barrido de encendido, todo sintetizado. Opcional.</span><span data-l="ru">Загрузка в стиле BIOS, щелчки клавиш, гул ЭЛТ и звук включения — всё синтезируется. По желанию.</span></p></div>
+        <div class="card"><h3><span data-l="en">Modem speed</span><span data-l="es">Velocidad de módem</span><span data-l="ru">Скорость модема</span></h3><p><span data-l="en">Throttle the output like a slow serial line, from 300 to 19200 baud. Long backlogs drain faster.</span><span data-l="es">Limitá la salida como una línea serie lenta, de 300 a 19200 baudios. Los atrasos largos se vacían más rápido.</span><span data-l="ru">Ограничивайте вывод, как у медленной линии, от 300 до 19200 бод. Большие очереди выводятся быстрее.</span></p></div>
+        <div class="card"><h3><span data-l="en">Light on resources</span><span data-l="es">Liviana</span><span data-l="ru">Лёгкая</span></h3><p><span data-l="en">Frame-rate cap, render quality, and it skips frames when nothing changes. Comfort mode removes flicker.</span><span data-l="es">Tope de cuadros, calidad de render, y saltea cuadros cuando nada cambia. El modo Comfort quita el parpadeo.</span><span data-l="ru">Лимит кадров, качество рендера, пропуск кадров, когда ничего не меняется. Режим Comfort убирает мерцание.</span></p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="skins">
+    <div class="wrap">
+      <h2><span data-l="en">Skins</span><span data-l="es">Skins</span><span data-l="ru">Скины</span></h2>
+      <p class="lead"><span data-l="en">Each skin sets the phosphor color and every effect. Switch with F10 or Alt+Shift+Left/Right.</span><span data-l="es">Cada skin define el color del fósforo y todos los efectos. Cambiá con F10 o Alt+Shift+Izquierda/Derecha.</span><span data-l="ru">Каждый скин задаёт цвет люминофора и все эффекты. Переключение: F10 или Alt+Shift+Влево/Вправо.</span></p>
+      <div class="gallery">
+        <figure><img src="img/skin-green-p1.jpg" alt="Green P1 skin with the beige 80s frame" loading="lazy" width="1358" height="854"><figcaption><b>Green P1</b><span data-l="en">the default, with the beige frame</span><span data-l="es">la de por defecto, con marco beige</span><span data-l="ru">по умолчанию, с бежевой рамкой</span></figcaption></figure>
+        <figure><img src="img/skin-atomic.jpg" alt="Atomic skin" loading="lazy" width="1358" height="854"><figcaption><b>Atomic</b><span data-l="en">retro-futurist green, heavy scanlines, burn-in</span><span data-l="es">verde retrofuturista, scanlines marcadas, burn-in</span><span data-l="ru">ретрофутуристичный зелёный, заметная развёртка, выгорание</span></figcaption></figure>
+        <figure><img src="img/skin-sepia.jpg" alt="Sepia skin" loading="lazy" width="1358" height="854"><figcaption><b>Sepia</b><span data-l="en">warm and paper-like, gentle effects</span><span data-l="es">cálida, aspecto de papel, efectos suaves</span><span data-l="ru">тёплый, «бумажный», мягкие эффекты</span></figcaption></figure>
+        <figure><img src="img/skin-amber-80s.jpg" alt="Amber 80s skin" loading="lazy" width="1358" height="854"><figcaption><b>Amber 80s</b><span data-l="en">classic amber monochrome</span><span data-l="es">monocromo ámbar clásico</span><span data-l="ru">классический янтарный монохром</span></figcaption></figure>
+        <figure><img src="img/skin-cool-cyan.jpg" alt="Cool Cyan skin" loading="lazy" width="1358" height="854"><figcaption><b>Cool Cyan</b><span data-l="en">cold cyan glow</span><span data-l="es">resplandor cian frío</span><span data-l="ru">холодное голубое свечение</span></figcaption></figure>
+        <figure><img src="img/skin-ibm-blue.jpg" alt="IBM Blue skin" loading="lazy" width="1358" height="854"><figcaption><b>IBM Blue</b><span data-l="en">blue phosphor, black frame</span><span data-l="es">fósforo azul, marco negro</span><span data-l="ru">синий люминофор, чёрная рамка</span></figcaption></figure>
+        <figure><img src="img/skin-white-p4.jpg" alt="White P4 skin with the retro TV frame" loading="lazy" width="1358" height="854"><figcaption><b>White P4</b><span data-l="en">with the retro TV frame</span><span data-l="es">con el marco de TV retro</span><span data-l="ru">с рамкой ретро-телевизора</span></figcaption></figure>
+        <figure><img src="img/skin-clean.jpg" alt="Clean skin, almost no effects" loading="lazy" width="1358" height="854"><figcaption><b>Clean</b><span data-l="en">almost no effects, keeps your colors</span><span data-l="es">casi sin efectos, conserva tus colores</span><span data-l="ru">почти без эффектов, сохраняет ваши цвета</span></figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section id="start">
+    <div class="wrap">
+      <h2><span data-l="en">Run it</span><span data-l="es">Ejecutarla</span><span data-l="ru">Запуск</span></h2>
+      <p class="lead"><span data-l="en">Windows 10/11 and Node.js 18 or newer. There is no installer release yet: you run it from source, which takes four commands.</span><span data-l="es">Windows 10/11 y Node.js 18 o superior. Todavía no hay una release con instalador: se ejecuta desde el código, con cuatro comandos.</span><span data-l="ru">Windows 10/11 и Node.js 18 или новее. Готового установщика пока нет: приложение запускается из исходников, это четыре команды.</span></p>
+      <div class="code">
+        <button class="cp" type="button" id="copy"><span data-l="en">Copy</span><span data-l="es">Copiar</span><span data-l="ru">Копировать</span></button>
+<pre id="cmds">git clone https://github.com/GabrielAmbrosio/phosphor.git
+cd phosphor
+npm install
+npm start</pre>
+      </div>
+      <p class="lead" style="margin-top:14px"><span data-l="en">Use <code>npm run claude</code> to open Claude Code inside it, or <code>npx electron . &lt;command&gt;</code> for any other command.</span><span data-l="es">Usá <code>npm run claude</code> para abrir Claude Code adentro, o <code>npx electron . &lt;comando&gt;</code> para cualquier otro comando.</span><span data-l="ru">Команда <code>npm run claude</code> открывает Claude Code внутри, а <code>npx electron . &lt;команда&gt;</code> — любую другую команду.</span></p>
+      <table class="keys">
+        <tr><th><span data-l="en">Key</span><span data-l="es">Tecla</span><span data-l="ru">Клавиша</span></th><th><span data-l="en">Action</span><span data-l="es">Acción</span><span data-l="ru">Действие</span></th></tr>
+        <tr><td><kbd>F10</kbd></td><td><span data-l="en">Settings: skins, frame, sliders, sound, speed</span><span data-l="es">Ajustes: skins, marco, sliders, sonido, velocidad</span><span data-l="ru">Настройки: скины, рамка, ползунки, звук, скорость</span></td></tr>
+        <tr><td><kbd>F11</kbd></td><td><span data-l="en">Fullscreen</span><span data-l="es">Pantalla completa</span><span data-l="ru">Полный экран</span></td></tr>
+        <tr><td><kbd>F12</kbd></td><td><span data-l="en">Save the screen as a PNG</span><span data-l="es">Guardar la pantalla como PNG</span><span data-l="ru">Сохранить экран как PNG</span></td></tr>
+        <tr><td><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>&larr;</kbd>/<kbd>&rarr;</kbd></td><td><span data-l="en">Previous / next skin</span><span data-l="es">Skin anterior / siguiente</span><span data-l="ru">Предыдущий / следующий скин</span></td></tr>
+      </table>
+    </div>
+  </section>
+
+  <section id="faq">
+    <div class="wrap">
+      <h2>FAQ</h2>
+      <details><summary><span data-l="en">Is it free and open source?</span><span data-l="es">¿Es gratis y de código abierto?</span><span data-l="ru">Она бесплатная и с открытым кодом?</span></summary><p><span data-l="en">Yes. It is MIT licensed. The VT323 font is under the SIL Open Font License.</span><span data-l="es">Sí. Tiene licencia MIT. La fuente VT323 usa la SIL Open Font License.</span><span data-l="ru">Да. Лицензия MIT. Шрифт VT323 распространяется по SIL Open Font License.</span></p></details>
+      <details><summary><span data-l="en">Does it work on macOS or Linux?</span><span data-l="es">¿Funciona en macOS o Linux?</span><span data-l="ru">Работает ли на macOS и Linux?</span></summary><p><span data-l="en">Not yet. It uses Windows ConPTY and was only tested on Windows 11. A port is one of the things contributors can help with.</span><span data-l="es">Todavía no. Usa ConPTY de Windows y solo se probó en Windows 11. Un port es algo en lo que se puede colaborar.</span><span data-l="ru">Пока нет. Используется ConPTY из Windows, тестировалось только на Windows 11. Порт — одна из задач, в которых можно помочь.</span></p></details>
+      <details><summary><span data-l="en">How heavy is it?</span><span data-l="es">¿Cuánto consume?</span><span data-l="ru">Насколько она требовательна?</span></summary><p><span data-l="en">On the test machine, an idle terminal at the default 30 fps used about 520 MB across all Electron processes (about 270 MB of that is Electron itself), and a static skin draws almost nothing. Numbers vary by machine.</span><span data-l="es">En el equipo de prueba, una terminal quieta a los 30 fps por defecto usó cerca de 520 MB entre todos los procesos de Electron (unos 270 MB son de Electron), y una skin estática casi no dibuja. Los números varían según el equipo.</span><span data-l="ru">На тестовом компьютере простаивающий терминал при 30 к/с по умолчанию занимал около 520 МБ во всех процессах Electron (около 270 МБ — сам Electron), а статичный скин почти ничего не рисует. Значения зависят от компьютера.</span></p></details>
+      <details><summary><span data-l="en">Can I make it less intense?</span><span data-l="es">¿Se puede hacer menos intensa?</span><span data-l="ru">Можно ли сделать эффекты слабее?</span></summary><p><span data-l="en">Yes. Every effect has a slider in the F10 panel, the Clean skin has almost none, and Comfort mode removes flicker, jitter and flashes.</span><span data-l="es">Sí. Cada efecto tiene un slider en el panel F10, la skin Clean casi no tiene ninguno, y el modo Comfort quita parpadeo, inestabilidad y destellos.</span><span data-l="ru">Да. У каждого эффекта есть ползунок в панели F10, у скина Clean их почти нет, а режим Comfort убирает мерцание, дрожание и вспышки.</span></p></details>
+      <details><summary><span data-l="en">How can I help?</span><span data-l="es">¿Cómo puedo colaborar?</span><span data-l="ru">Как помочь проекту?</span></summary><p><span data-l="en">Try it on other GPUs and screens and report what breaks, add skins or frames, or help with tabs, an app icon, a tested installer and a macOS/Linux port. Open an issue or a pull request on GitHub.</span><span data-l="es">Probala en otras placas de video y pantallas y avisá qué se rompe, sumá skins o marcos, o ayudá con pestañas, un ícono, un instalador probado y un port a macOS/Linux. Abrí un issue o un pull request en GitHub.</span><span data-l="ru">Попробуйте на других видеокартах и мониторах и сообщите, что сломалось, добавьте скины или рамки либо помогите с вкладками, значком, проверенным установщиком и портом на macOS/Linux. Создайте issue или pull request на GitHub.</span></p></details>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <p><span data-l="en">Inspired by <a href="https://github.com/Swordfish90/cool-retro-term">cool-retro-term</a> by Filippo Scognamiglio (<a href="https://github.com/Swordfish90">@Swordfish90</a>). PHOSPHOR does not use any of its code.</span><span data-l="es">Inspirada en <a href="https://github.com/Swordfish90/cool-retro-term">cool-retro-term</a> de Filippo Scognamiglio (<a href="https://github.com/Swordfish90">@Swordfish90</a>). PHOSPHOR no usa nada de su código.</span><span data-l="ru">Вдохновлено <a href="https://github.com/Swordfish90/cool-retro-term">cool-retro-term</a> Филиппо Сконьямильо (<a href="https://github.com/Swordfish90">@Swordfish90</a>). PHOSPHOR не использует его код.</span></p>
+      <p><span data-l="en">Font: VT323 by Peter Hull (SIL Open Font License). Built with Electron, xterm.js and node-pty.</span><span data-l="es">Fuente: VT323 de Peter Hull (SIL Open Font License). Hecha con Electron, xterm.js y node-pty.</span><span data-l="ru">Шрифт: VT323 Питера Халла (SIL Open Font License). Построено на Electron, xterm.js и node-pty.</span></p>
+      <p><span data-l="en">An independent project, not affiliated with any company whose software you run inside it.</span><span data-l="es">Proyecto independiente, no afiliado a ninguna empresa cuyo software ejecutes adentro.</span><span data-l="ru">Независимый проект, не связанный ни с одной компанией, чьё ПО вы запускаете внутри него.</span></p>
+      <p><a href="https://github.com/GabrielAmbrosio/phosphor">GitHub</a> &middot; MIT</p>
+    </div>
+  </footer>
+
+  <script>
+    // Language: English by default; the choice is remembered when storage is available.
+    (function () {
+      var html = document.documentElement;
+      function set(lang) {
+        html.lang = lang;
+        document.querySelectorAll('.lang button').forEach(function (b) {
+          b.setAttribute('aria-pressed', String(b.dataset.lang === lang));
+        });
+        try { localStorage.setItem('phosphor-lang', lang); } catch (e) {}
+      }
+      var saved = null;
+      try { saved = localStorage.getItem('phosphor-lang'); } catch (e) {}
+      var asked = new URLSearchParams(location.search).get('lang'); // e.g. ?lang=es
+      if (asked === 'en' || asked === 'es' || asked === 'ru') saved = asked;
+      if (saved === 'es' || saved === 'ru') set(saved);
+      document.querySelectorAll('.lang button').forEach(function (b) {
+        b.addEventListener('click', function () { set(b.dataset.lang); });
+      });
+
+      var copy = document.getElementById('copy');
+      copy.addEventListener('click', function () {
+        var text = document.getElementById('cmds').textContent;
+        if (navigator.clipboard) navigator.clipboard.writeText(text).catch(function () {});
+      });
+
+      // Hero terminal: types a short session, then loops. Static text when motion is reduced.
+      var out = document.getElementById('demo');
+      var lines = [
+        'user@phosphor:~$ git clone phosphor',
+        '<span class="dim">Cloning into \'phosphor\'... done.</span>',
+        'user@phosphor:~$ npm start',
+        '<span class="dim">PHOSPHOR v1.0 - CRT terminal</span>',
+        '<span class="dim">Phosphor ... OK   Scanlines ... OK</span>',
+        'user@phosphor:~$ '
+      ];
+      var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+      function strip(s) { return s.replace(/<[^>]*>/g, ''); }
+      if (reduce) { out.innerHTML = lines.join('\n') + '<span class="cursor"></span>'; return; }
+      var li = 0, ci = 0, shown = '';
+      function tick() {
+        var line = lines[li];
+        var plain = strip(line);
+        if (ci < plain.length) {
+          ci++;
+          var typed = plain.slice(0, ci);
+          var dim = line.indexOf('class="dim"') > -1;
+          out.innerHTML = shown + (dim ? '<span class="dim">' + typed + '</span>' : typed) + '<span class="cursor"></span>';
+          setTimeout(tick, dim ? 12 : 42);
+        } else {
+          shown += line + '\n'; li++; ci = 0;
+          if (li < lines.length) setTimeout(tick, 380);
+          else setTimeout(function () { li = 0; ci = 0; shown = ''; out.innerHTML = ''; tick(); }, 4200);
+        }
+      }
+      tick();
+    })();
+  </script>
+</body>
+</html>
