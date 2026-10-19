@@ -1,0 +1,76 @@
+{
+  "name": "phosphor-term",
+  "productName": "PHOSPHOR",
+  "version": "1.0.0",
+  "description": "A CRT terminal for Windows with simulated phosphor: persistence, burn-in, scanlines, curvature, skins and monitor frames.",
+  "main": "main.js",
+  "license": "MIT",
+  "author": "Gabriel Ambrosio",
+  "homepage": "https://github.com/GabrielAmbrosio/phosphor#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GabrielAmbrosio/phosphor.git"
+  },
+  "bugs": {
+    "url": "https://github.com/GabrielAmbrosio/phosphor/issues"
+  },
+  "keywords": [
+    "terminal",
+    "crt",
+    "retro",
+    "electron",
+    "xterm",
+    "windows",
+    "shader",
+    "webgl",
+    "cool-retro-term"
+  ],
+  "scripts": {
+    "start": "electron .",
+    "claude": "electron . claude",
+    "shots": "node tools/make-shots.js",
+    "dist": "electron-builder --win",
+    "dist:dir": "electron-builder --win --dir"
+  },
+  "dependencies": {
+    "@lydell/node-pty": "^1.2.0-beta.15",
+    "@xterm/addon-canvas": "^0.7.0",
+    "@xterm/addon-clipboard": "^0.1.0",
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/xterm": "^5.5.0"
+  },
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^26.0.0"
+  },
+  "build": {
+    "appId": "com.gabrielambrosio.phosphor",
+    "productName": "PHOSPHOR",
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer.js",
+      "index.html",
+      "fonts/**",
+      "node_modules/@xterm/xterm/css/**",
+      "node_modules/@xterm/xterm/lib/xterm.js",
+      "node_modules/@xterm/addon-fit/lib/addon-fit.js",
+      "node_modules/@xterm/addon-canvas/lib/addon-canvas.js",
+      "node_modules/@xterm/addon-clipboard/lib/addon-clipboard.js",
+      "LICENSE"
+    ],
+    "asarUnpack": [
+      "node_modules/@lydell/**"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

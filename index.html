@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="es" data-bezel="none">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'">
+  <title>PHOSPHOR</title>
+  <link rel="stylesheet" href="node_modules/@xterm/xterm/css/xterm.css">
+  <style>
+    @font-face { font-family: 'VT323'; src: url('fonts/VT323.woff2') format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+    @font-face { font-family: 'VT323'; src: url('fonts/VT323-ext.woff2') format('woff2'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113; }
+
+    :root { --bz-t: 0px; --bz-r: 0px; --bz-b: 0px; --bz-l: 0px; --bz-rad: 0px; }
+    html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+
+    /* Pantalla: el canvas WebGL queda dentro del marco */
+    #gl { position: fixed; left: var(--bz-l); top: var(--bz-t); right: var(--bz-r); bottom: var(--bz-b);
+      width: calc(100% - var(--bz-l) - var(--bz-r)); height: calc(100% - var(--bz-t) - var(--bz-b));
+      display: block; border-radius: var(--bz-rad); }
+    /* La terminal real queda invisible encima: recibe teclado y mouse; el shader la redibuja. */
+    #wrap { position: fixed; left: var(--bz-l); top: var(--bz-t); right: var(--bz-r); bottom: var(--bz-b);
+      padding: 30px 40px; box-sizing: border-box; opacity: 0; }
+    #term { width: 100%; height: 100%; }
+
+    /* Marco de monitor (opcional) */
+    #bezel { position: fixed; inset: 0; overflow: hidden; pointer-events: none; z-index: 5; }
+    html[data-bezel="none"] #bezel { display: none; }
+    html[data-bezel="beige"] { --frame: #cbbf9f; --hi: #e9dfc3; --lo: #7d7357; --label: #6f6650; }
+    html[data-bezel="dark"]  { --frame: #18181b; --hi: #34343b; --lo: #050506; --label: #6a6a74; }
+    html[data-bezel="tv"]    { --frame: #6a4426; --hi: #946744; --lo: #25150a; --label: #dcc59f; }
+    #bezel .glass { position: absolute; left: var(--bz-l); top: var(--bz-t); right: var(--bz-r); bottom: var(--bz-b);
+      border-radius: var(--bz-rad);
+      box-shadow: inset 0 0 22px 6px rgba(0,0,0,.9), inset 0 0 90px rgba(0,0,0,.45),
+                  0 0 0 3px var(--lo), 0 0 0 7px var(--hi), 0 0 0 300vmax var(--frame); }
+    #bezel .glare { position: absolute; left: var(--bz-l); top: var(--bz-t); right: var(--bz-r); bottom: var(--bz-b);
+      border-radius: var(--bz-rad);
+      background: linear-gradient(118deg, rgba(255,255,255,.09) 0%, rgba(255,255,255,0) 28%, rgba(255,255,255,0) 72%, rgba(255,255,255,.04) 100%); }
+    #bezel .label { position: absolute; left: calc(var(--bz-l) + 6px); bottom: calc((var(--bz-b) - 16px) / 2);
+      font: bold 13px/16px 'Cascadia Mono', Consolas, monospace; letter-spacing: 5px; color: var(--label); text-shadow: 0 1px 0 rgba(255,255,255,.25); }
+    #bezel .led { position: absolute; right: calc(var(--bz-r) + 10px); bottom: calc((var(--bz-b) - 9px) / 2);
+      width: 9px; height: 9px; border-radius: 50%; background: #5dff7a; box-shadow: 0 0 8px 2px #3dff62; animation: pulse 3.2s ease-in-out infinite; }
+    #bezel .knob { display: none; position: absolute; bottom: calc((var(--bz-b) - 26px) / 2); width: 26px; height: 26px; border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #c9a374, #3c2412 70%); box-shadow: 0 2px 4px rgba(0,0,0,.6), inset 0 0 0 2px rgba(0,0,0,.35); }
+    #bezel .knob.k1 { right: calc(var(--bz-r) + 44px); }
+    #bezel .knob.k2 { right: calc(var(--bz-r) + 80px); }
+    html[data-bezel="tv"] #bezel .knob { display: block; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .55; } }
+
+    /* Panel de ajustes */
+    #panel { position: fixed; top: 12px; right: 12px; width: 320px; max-height: calc(100% - 24px); overflow: auto;
+      background: rgba(10,14,10,.95); color: #bfe9c9; border: 1px solid #2b5a38; border-radius: 8px;
+      font: 13px/1.3 'Cascadia Mono', Consolas, monospace; padding: 12px 14px; display: none; z-index: 10; }
+    #panel h1 { font-size: 14px; margin: 0 0 4px; letter-spacing: 2px; color: #7dffa0; }
+    #panel h2 { font-size: 11px; margin: 14px 0 6px; letter-spacing: 2px; color: #5fae78; text-transform: uppercase; border-bottom: 1px solid #1f4029; padding-bottom: 3px; }
+    #panel .row { display: flex; flex-wrap: wrap; gap: 6px; }
+    #panel button { background: #12261a; color: #bfe9c9; border: 1px solid #2b5a38; border-radius: 4px; padding: 4px 8px; cursor: pointer; font: inherit; }
+    #panel button:hover { background: #1c3d2a; }
+    #panel button.on { background: #2b6b43; border-color: #7dffa0; color: #fff; }
+    #panel label { display: block; margin: 8px 0 2px; }
+    #panel label span { float: right; opacity: .7; }
+    #panel label.check { display: flex; align-items: center; gap: 8px; margin: 8px 0 0; cursor: pointer; }
+    #panel input[type=range] { width: 100%; }
+    #panel .hint { opacity: .6; margin-top: 12px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <canvas id="gl"></canvas>
+  <div id="wrap"><div id="term"></div></div>
+  <div id="bezel">
+    <div class="glass"></div>
+    <div class="glare"></div>
+    <div class="label">PHOSPHOR</div>
+    <div class="knob k1"></div><div class="knob k2"></div>
+    <div class="led"></div>
+  </div>
+  <div id="panel"></div>
+
+  <script src="node_modules/@xterm/xterm/lib/xterm.js"></script>
+  <script src="node_modules/@xterm/addon-fit/lib/addon-fit.js"></script>
+  <script src="node_modules/@xterm/addon-canvas/lib/addon-canvas.js"></script>
+  <script src="node_modules/@xterm/addon-clipboard/lib/addon-clipboard.js"></script>
+  <script src="renderer.js"></script>
+</body>
+</html>
